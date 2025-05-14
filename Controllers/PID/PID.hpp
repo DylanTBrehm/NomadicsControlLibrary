@@ -32,14 +32,22 @@ private:
 
     // State information for PID calculation
     double state;
+    double stateDot;
+    double deltaState;
     double saveState;
+
     double error;
-    double saveError;
+    double errorDot;
+
     double desiredState;
+    double desiredStateDot;
+    double deltaDesiredState;
+    double saveDesiredState;
 
     // deltas for calculus computation
+    double time;
     double deltaTime;
-    double compareTime;
+    double saveTime;
 
     // Result information
     double PIDResult;
@@ -61,18 +69,24 @@ public:
     // These update the stored state information
     void setDesiredState(double currentDesiredState_);
     void setState(double state_);
+    void setState(double state_, double stateDot_);
+
     void setPIDConstants(double proportionalConstant, double integralConstant, double derivativeConstant);
     void setPIDConstants(PID_Constants_t pidConstants);
     void setPIDConstantsNickZieg(double ultimateConstant, double responsePeriod);
-    void setDeltaTime();
+
+    void setTime();
+    void setTimeSeconds(double time_);
+    void setTimeMillis(uint64_t time_);
+    void setTimeMicros(uint64_t time_);
     void setConstantDeltaTime(double deltaTime_);
 
     // Calculate proportional, integral, and derivative seperatly
     // then sum with sumPID to calculate output
-    void calculateProportional();
-    void calculateIntegral();
-    void calculateBoundedIntegral(double lowerBound, double upperBound); // this calculates integral with bounds
-    void calculateDerivative();
+    void calcProportionalOutput();
+    void calcIntegralOutput();
+    void calcBoundedIntegralOutput(double lowerBound, double upperBound); // this calculates integral with bounds
+    void calcDerivativeOutput();
     void sumPID();
 
     // Retreive PID sum result

@@ -6,25 +6,35 @@
 
 PID::PID(double proportionalConstant_, double integralConstant_, double derivativeConstant_)
 {
+    // Initializes the PID controller with given constants
     proportionalConstant = proportionalConstant_;
     integralConstant = integralConstant_;
     derivativeConstant = derivativeConstant_;
-    state = 0;
-    desiredState = 0;
-    integralOutput = 0;
-    PIDResult = 0;
-    error = 0;
-    saveError = 0;
-    compareTime = 0;
 
+    // Initialize state variables
+    state = 0;
+    stateDot = 0;
+
+    desiredState = 0;
+    desiredStateDot = 0;
+
+    error = 0;
+    errorDot = 0;
+
+    // Initialize time variables
+    saveTime = 0;
+
+    // Intialize integration variables
+    integralOutput = 0;
     integralLowerBound = 0;
     integralUpperBound = 0;
+    integralDecayRate = 0.9995;
 
+    // Initialize output variables
     proportionalOutput = 0;
     integralOutput = 0;
     derivativeOutput = 0;
-
-    integralDecayRate = 0.9995;
+    PIDResult = 0;
 
     for (int i = 0; i < DERIVATIVE_BUFFER_SIZE; i++)
     {
@@ -34,20 +44,37 @@ PID::PID(double proportionalConstant_, double integralConstant_, double derivati
 
 PID::PID(PID_Constants_t pidConstants)
 {
+    // Initializes the PID controller with given constants
     proportionalConstant = pidConstants.proportional;
     integralConstant = pidConstants.integral;
     derivativeConstant = pidConstants.derivative;
 
+    // Initialize state variables
     state = 0;
-    desiredState = 0;
-    integralOutput = 0;
-    PIDResult = 0;
-    error = 0;
-    saveError = 0;
-    compareTime = 0;
+    stateDot = 0;
+    saveState = 0;
 
+    desiredState = 0;
+    desiredStateDot = 0;
+    saveDesiredState = 0;
+
+    error = 0;
+    errorDot = 0;
+
+    // Initialize time variables
+    saveTime = 0;
+
+    // Intialize integration variables
+    integralOutput = 0;
     integralLowerBound = 0;
     integralUpperBound = 0;
+    integralDecayRate = 0.9995;
+
+    // Initialize output variables
+    proportionalOutput = 0;
+    integralOutput = 0;
+    derivativeOutput = 0;
+    PIDResult = 0;
 
     for (int i = 0; i < DERIVATIVE_BUFFER_SIZE; i++)
     {
@@ -57,18 +84,34 @@ PID::PID(PID_Constants_t pidConstants)
 
 PID::PID()
 {
+    // Initializes the PID controller with default zeros
     proportionalConstant = 0;
     integralConstant = 0;
     derivativeConstant = 0;
 
+    // Initialize state variables
     state = 0;
-    desiredState = 0;
-    integralOutput = 0;
-    error = 0;
-    compareTime = 0;
+    stateDot = 0;
 
+    desiredState = 0;
+    desiredStateDot = 0;
+
+    error = 0;
+    errorDot = 0;
+
+    // Initialize time variables
+    saveTime = 0;
+
+    // Intialize integration variables
+    integralOutput = 0;
     integralLowerBound = 0;
     integralUpperBound = 0;
+    integralDecayRate = 0.9995;
+
+    // Initialize output variables
+    proportionalOutput = 0;
+    integralOutput = 0;
+    derivativeOutput = 0;
     PIDResult = 0;
 
     for (int i = 0; i < DERIVATIVE_BUFFER_SIZE; i++)
@@ -81,12 +124,13 @@ PID::~PID()
 {
 }
 
-// This sets the desired state
-// This must be called before set state
-// To be correct
 void PID::setDesiredState(double desiredState_)
 {
+
     desiredState = desiredState_;
+    deltaDesiredState = desiredState - saveDesiredState;
+    saveDesiredState = desiredState;
+    desiredStateDot = deltaDesiredState / deltaTime;
 }
 
 void PID::setState(double state_)
@@ -94,15 +138,46 @@ void PID::setState(double state_)
     // setting the state updates all necessary error information
     // must set desired state first
     state = state_;
+    deltaState = state - saveState;
+    saveState = state;
+    stateDot = deltaState / deltaTime;
+
     error = desiredState - state;
-    deltaError = error - saveError;
-    saveError = error;
+    errorDot = desiredStateDot - stateDot;
 }
 
-void PID::setDeltaTime()
+void PID::setState(double state_, double stateDot_)
 {
-    deltaTime = (micros() / 1000000.0) - compareTime;
-    compareTime = (micros() / 1000000.0);
+    // setting the state updates all necessary error information
+    // must set desired state first
+    state = state_;
+    deltaState = state - saveState;
+    saveState = state;
+    stateDot = stateDot_;
+
+    error = desiredState - state;
+    errorDot = desiredStateDot - stateDot;
+
+    // derivativeOutput = derivativeConstant * (stateDot_ - saveState);
+    // saveState = stateDot_;
+}
+
+void PID::setTimeSeconds(double time_)
+{
+    deltaTime = time_ - saveTime;
+    saveTime = time_;
+}
+
+void PID::setTimeMillis(uint64_t time_)
+{
+    deltaTime = (time_ / 1000.0) - saveTime;
+    saveTime = (time_ / 1000.0);
+}
+
+void PID::setTimeMicros(uint64_t time_)
+{
+    deltaTime = (time_ / 1000000.0) - saveTime;
+    saveTime = (time_ / 1000000.0);
 }
 
 void PID::setConstantDeltaTime(double deltaTime_)
@@ -110,19 +185,19 @@ void PID::setConstantDeltaTime(double deltaTime_)
     deltaTime = deltaTime_;
 }
 
-void PID::calculateProportional()
+void PID::calcProportionalOutput()
 {
     proportionalOutput = proportionalConstant * error;
 }
 
-void PID::calculateIntegral()
+void PID::calcIntegralOutput()
 {
     integralOutput = integralOutput * (integralDecayRate) + integralConstant * error * deltaTime;
 }
 
-void PID::calculateBoundedIntegral(double lowerBound, double upperBound)
+void PID::calcBoundedIntegralOutput(double lowerBound, double upperBound)
 {
-    integralOutput = integralOutput + integralConstant * error * deltaTime;
+    calcIntegralOutput();
 
     if (integralOutput < lowerBound)
     {
@@ -134,13 +209,9 @@ void PID::calculateBoundedIntegral(double lowerBound, double upperBound)
     }
 }
 
-void PID::calculateDerivative()
+void PID::calcDerivativeOutput()
 {
-    double bufferSum = 0;
-    double value = 0;
-
-    derivativeOutput = derivativeConstant * (deltaError / deltaTime);
-    // derivativeOutput =derivativeConstant * (deltaError / deltaTime);
+    derivativeOutput = derivativeConstant * errorDot;
 }
 
 void PID::sumPID()
