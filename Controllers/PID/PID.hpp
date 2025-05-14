@@ -66,6 +66,12 @@ public:
     PID();
     ~PID();
 
+    double updateCtrlState(double state_, double time_);
+    double updateCtrlState(double state_, double stateDot_, double time_);
+
+    double updateCtrlSys(double state_, double desiredState_, double time_);
+    double updateCtrlSys(double state_, double stateDot_, double desiredState_, double time_);
+
     // These update the stored state information
     void setDesiredState(double currentDesiredState_);
     void setState(double state_);

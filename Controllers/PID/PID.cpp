@@ -124,6 +124,68 @@ PID::~PID()
 {
 }
 
+double PID::updateCtrlState(double state_, double time_)
+{
+    // setting the state updates all necessary error information
+    // must set desired state first
+    setTimeSeconds(time_);
+    setState(state_);
+
+    calcProportionalOutput();
+    calcIntegralOutput();
+    calcDerivativeOutput();
+    sumPID();
+
+    return PIDResult;
+}
+
+double PID::updateCtrlState(double state_, double stateDot_, double time_)
+{
+    // setting the state updates all necessary error information
+    // must set desired state first
+    setTimeSeconds(time_);
+    setState(state_, stateDot_);
+
+    calcProportionalOutput();
+    calcIntegralOutput();
+    calcDerivativeOutput();
+    sumPID();
+
+    return PIDResult;
+}
+
+double PID::updateCtrlSys(double state_, double desiredState_, double time_)
+{
+    // setting the state updates all necessary error information
+    // must set desired state first
+    setTimeSeconds(time_);
+    setState(state_);
+    setDesiredState(desiredState_);
+
+    calcProportionalOutput();
+    calcIntegralOutput();
+    calcDerivativeOutput();
+    sumPID();
+
+    return PIDResult;
+}
+
+double PID::updateCtrlSys(double state_, double stateDot_, double desiredState_, double time_)
+{
+    // setting the state updates all necessary error information
+    // must set desired state first
+    setTimeSeconds(time_);
+    setState(state_, stateDot_);
+    setDesiredState(desiredState_);
+
+    calcProportionalOutput();
+    calcIntegralOutput();
+    calcDerivativeOutput();
+    sumPID();
+
+    return PIDResult;
+}
+
 void PID::setDesiredState(double desiredState_)
 {
 
@@ -240,4 +302,4 @@ void PID::setPIDConstantsNickZieg(double ultimateConstant, double responsePeriod
     derivativeConstant = 0.11111 * ultimateConstant * responsePeriod;
 }
 
-#endif // !PID_CPP
+#endif // PID_CPP
