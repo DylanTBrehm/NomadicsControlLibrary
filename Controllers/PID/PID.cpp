@@ -28,7 +28,7 @@ PID::PID(double proportionalConstant_, double integralConstant_, double derivati
     integralOutput = 0;
     integralLowerBound = 0;
     integralUpperBound = 0;
-    integralDecayRate = 0.9995;
+    integralDecayRate = 1;
 
     // Initialize output variables
     proportionalOutput = 0;
@@ -68,7 +68,7 @@ PID::PID(PID_Constants_t pidConstants)
     integralOutput = 0;
     integralLowerBound = 0;
     integralUpperBound = 0;
-    integralDecayRate = 0.9995;
+    integralDecayRate = 1;
 
     // Initialize output variables
     proportionalOutput = 0;
@@ -106,7 +106,7 @@ PID::PID()
     integralOutput = 0;
     integralLowerBound = 0;
     integralUpperBound = 0;
-    integralDecayRate = 0.9995;
+    integralDecayRate = 1;
 
     // Initialize output variables
     proportionalOutput = 0;

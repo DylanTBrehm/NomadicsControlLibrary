@@ -100,6 +100,8 @@ public:
     double getProportionalOutput() { return proportionalOutput; }
     double getIntegralOutput() { return integralOutput; }
     double getDerivativeOutput() { return derivativeOutput; }
+
+    void setIntegralDecayRate(double decayRate) { integralDecayRate = decayRate; }
 };
 
 #endif
